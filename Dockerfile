@@ -5,9 +5,6 @@ FROM alpine:latest AS builder
 
 LABEL maintainer="Thomas Jammet <contact@monaserver.ovh>"
 
-ENV LUAJIT_VERSION 2.1.ROLLING
-ENV LUAJIT_DOWNLOAD_SHA256 31d7a4853df4c548bf91c13d3b690d19663d4c06ae952b62606c8225d0b410ad
-
 # install prerequisites
 RUN apk add --no-cache libgcc \
 		libstdc++ \
@@ -21,13 +18,11 @@ RUN apk add --no-cache --virtual .build-deps \
 
 # Build & install luajit
 WORKDIR /usr/src
-RUN curl -fSL -o luajit.tar.gz https://github.com/LuaJIT/LuaJIT/archive/refs/tags/v$LUAJIT_VERSION.tar.gz \
-	&& echo "$LUAJIT_DOWNLOAD_SHA256 *luajit.tar.gz" | sha256sum -c \
-	&& tar -xzf luajit.tar.gz \
-	&& cd LuaJIT-$LUAJIT_VERSION \
-	&& sed -i 's/#XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT/XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT/g' src/Makefile \
-	&& make \
-	&& make install
+RUN git clone --depth=1 https://github.com/LuaJIT/LuaJIT.git LuaJIT \
+    && cd LuaJIT \
+    && sed -i 's/#XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT/XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT/g' src/Makefile \
+    && make \
+    && make install
 
 # Build
 RUN git clone https://github.com/MonaSolutions/MonaServer2.git
